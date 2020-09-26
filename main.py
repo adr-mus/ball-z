@@ -1,4 +1,3 @@
-
 import numpy as np
 
 
@@ -13,14 +12,15 @@ class Ball:
         self.y = 0
         self.vx = 0
         self.vy = 0
-    
+
     def update_xy(self):
         self.x += self.vx * self.h
         self.y += self.vy * self.h
-    
+
 
 class Paddle:
     LENGTHS = [2, 5, 10, 15, 22, 32]
+
     def __init__(self):
         self.l = 2
         self.x = 0
@@ -28,11 +28,11 @@ class Paddle:
         self.shoots = False
         self.is_magnetic = False
         self.is_cursed = False
-    
+
     @property
     def length(self):
         return self.LENGTHS[self.l]
-    
+
     def update_x(self):
         pass
 
@@ -44,7 +44,7 @@ class Level:
     def __init__(self, i):
         self.tiles = np.load(f"levels\\lvl_{i}.npy")
         self.paddle = Paddle()
-        self.balls = [Ball()]
+        self.balls = {Ball()}
 
 
 class Game:
@@ -52,6 +52,7 @@ class Game:
         self.level = Level(1)
         self.lives = 2
         self.score = 0
+
 
 # resolution: 640x480
 # tile size: 30x15
@@ -62,5 +63,3 @@ class Game:
 # board space height: 7*15 = 105
 # lower margin height: 480 - (300 + 48 + 105) = 27
 # base paddle length: 72
-
-        

@@ -1,5 +1,6 @@
 import enum, abc
 
+
 class Tile(abc.ABC):
     WIDTH = 2
     HEIGHT = 1
@@ -16,7 +17,7 @@ class Tile(abc.ABC):
 class BlankTile(Tile):
     def on_hit(self, ball):
         pass
-    
+
 
 class RegularTile(Tile):
     class Color(enum.Enum):
@@ -29,7 +30,7 @@ class RegularTile(Tile):
     def __init__(self):
         self.color = self.Color.RED
         Tile.__init__(self)
-    
+
 
 class InvisibleTile(Tile):
     def __init__(self):
@@ -47,6 +48,7 @@ class TripleTile(Tile):
     def __init__(self):
         self.n_hits = 0
         Tile.__init__(self)
+
 
 class ExplosiveTile(Tile):
     pass
