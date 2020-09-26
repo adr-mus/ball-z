@@ -121,5 +121,3 @@ class Shrink(Bonus):
 class Fall(Bonus):
     def on_collect(self, game):
         game.level.paddle.cursed = True
-
-print("n")
