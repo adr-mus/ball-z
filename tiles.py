@@ -14,11 +14,6 @@ class Tile(abc.ABC):
         pass
 
 
-class BlankTile(Tile):
-    def on_hit(self, ball):
-        pass
-
-
 class RegularTile(Tile):
     class Color(enum.Enum):
         RED = enum.auto()
@@ -51,4 +46,5 @@ class TripleTile(Tile):
 
 
 class ExplosiveTile(Tile):
-    pass
+    def on_hit(self, ball):
+        pass
