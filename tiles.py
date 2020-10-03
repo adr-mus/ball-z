@@ -7,22 +7,22 @@ from bonuses import Bonus
 
 
 class Tile(pygame.sprite.Sprite, abc.ABC):
+    image = None # to be specified in subclasses
+
     # used to dynamically create a dict of form alias: a Tile subclass
     # aliases are used to build levels from txt files
-    tile_types = {}
+    types = {}
     @staticmethod
-    def register_tile(alias):
+    def register_type(alias):
         def wrapper(subcls):
-            Tile.tile_types[alias] = subcls
+            Tile.types[alias] = subcls
             return subcls
 
         return wrapper
 
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-
-        self.surf = pygame.Surface((30, 15))
-        self.rect = self.surf.get_rect(left=x, top=y)
+        self.rect = self.image.get_rect(left=x, top=y)
 
     def on_hit(self):
         self.kill()
@@ -38,25 +38,31 @@ class Tile(pygame.sprite.Sprite, abc.ABC):
         pygame.sprite.Sprite.kill(self)
 
 
-@Tile.register_tile("r")
+@Tile.register_type("r")
 class RegularTile(Tile):
-    def __init__(self, x, y, color="red"):
+    images = {color: pygame.image.load(os.path.join("images", "tiles", f"reg_{color}.png"))
+                for color in ["red", "green", "blue", "yellow"]}
+    def __init__(self, x, y, color="green"):
+        self.image = self.images[color]
         Tile.__init__(self, x, y)
-        self.image = pygame.image.load(os.path.join("images", "tiles", f"reg_{color}.png"))
 
 
-@Tile.register_tile("g")
+@Tile.register_type("g")
 class GlassTile(Tile):
+    image_intact = pygame.image.load(os.path.join("images", "tiles", "glass.png"))
     image_hit = pygame.image.load(os.path.join("images", "tiles", "glass_broken.png"))
     def __init__(self, x, y):
-        Tile.__init__(self, x, y)
-        self.image = pygame.image.load(os.path.join("images", "tiles", "glass.png"))
+        self.image = self.image_intact
         self.hit = False
+        Tile.__init__(self, x, y)
     
+    def soften(self):
+        self.image = self.image_hit
+        self.hit = True
+
     def on_hit(self):
         if not self.hit:
-            self.image = self.image_hit
-            self.hit = True
+            self.soften()
         else:
             self.kill()
 

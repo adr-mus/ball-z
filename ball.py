@@ -4,9 +4,10 @@ import pygame
 
 
 class Ball(pygame.sprite.Sprite):
+    image = pygame.image.load(os.path.join("images", "ball.png"))
+
     MAXSPEED = 12
 
-    image = pygame.image.load(os.path.join("images", "ball.png"))
     is_tiny = False
     is_fiery = False
     is_bullet = False
@@ -14,11 +15,10 @@ class Ball(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.surf = pygame.Surface((8, 8))
-        self.rect = self.surf.get_rect(center=(40, 177))
+        self.rect = self.image.get_rect(center=(40, 177))
 
-        self.vx = 3
-        self.vy = 1
+        self.vx = 4
+        self.vy = 3
 
         self.is_attached = False
 
@@ -28,13 +28,13 @@ class Ball(pygame.sprite.Sprite):
 
             if self.rect.left <= 20:
                 self.rect.left = 21
-                self.vx = -self.vx
+                self.vx *= -1
             elif self.rect.right >= 620:
                 self.rect.right = 619
-                self.vx = -self.vx
+                self.vx *= -1
             elif self.rect.top <= 27:
                 self.rect.top = 28
-                self.vy = -self.vy
+                self.vy *= -1
 
             if self.rect.top > 485:
                 self.kill()
@@ -43,9 +43,9 @@ class Ball(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-    def update_v(self, alpha, factor):
+    def update_v(self, alpha):
         v_mag = math.sqrt(self.vx ** 2 + self.vy ** 2)
-        v_mag = min(self.MAXSPEED, v_mag * factor)
+        v_mag = min(self.MAXSPEED, v_mag + 0.5)
 
         self.vx = round(v_mag * math.cos(alpha))
         self.vy = -round(v_mag * max(math.sin(alpha), 0.2))
@@ -60,9 +60,5 @@ class Ball(pygame.sprite.Sprite):
             else:
                 self.vy = -self.vy
 
+        tile.on_hit()
 
-class Life(pygame.sprite.Sprite):
-    image = pygame.image.load(r"images\life.png")
-    def __init__(self, i):
-        pygame.sprite.Sprite.__init__(self)
-        self.rect = self.image.get_rect(top=1, right=640 - 30*i)

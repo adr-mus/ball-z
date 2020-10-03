@@ -8,7 +8,7 @@ from game import Game
 
 def event_loop():
     for event in pygame.event.get():
-        if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
+        if event.type == KEYUP and event.key == K_ESCAPE:
             pygame.quit()
             sys.exit()
 
@@ -16,18 +16,20 @@ def event_loop():
 if __name__ == "__main__":
     pygame.init()
 
-    surface = pygame.display.set_mode((640, 480))
+    surface = pygame.display.set_mode((640, 480), FULLSCREEN)
     pygame.display.set_caption("Ball-Z")
 
     pygame.mouse.set_visible(False)
     pygame.event.set_grab(True)
 
     clock = pygame.time.Clock()
+
     game = Game()
     while True:
         event_loop()
 
-        game.update(surface)
+        game.update()
+        game.draw(surface)
 
         pygame.display.flip()
         clock.tick(60)
