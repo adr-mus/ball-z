@@ -67,7 +67,6 @@ class GlassTile(Tile):
             self.kill()
 
 
-
 # class Brick(Tile):
 #     def __init__(self):
 #         self.hit = False

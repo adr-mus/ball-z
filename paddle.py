@@ -2,6 +2,8 @@ import math, os.path
 
 import pygame
 
+from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
+
 
 class Paddle(pygame.sprite.Sprite):
     images = {i: pygame.image.load(os.path.join("images", "paddles", f"{i}.png"))
@@ -12,7 +14,7 @@ class Paddle(pygame.sprite.Sprite):
 
         self.len = 1
         self.image = self.images[self.len]
-        self.rect = self.image.get_rect(center=(320, 450))
+        self.rect = self.image.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - MARGIN))
 
         self.shoots = False
         self.is_magnetic = False
@@ -25,10 +27,10 @@ class Paddle(pygame.sprite.Sprite):
     def update(self):
         dx = pygame.mouse.get_rel()[0]
         self.rect.move_ip(dx, 0)
-        if self.rect.left <= 20:
-            self.rect.left = 20
-        elif self.rect.right >= 620:
-            self.rect.right = 620
+        if self.rect.left <= MARGIN:
+            self.rect.left = MARGIN
+        elif self.rect.right >= SCREEN_WIDTH - MARGIN:
+            self.rect.right = SCREEN_WIDTH - MARGIN
         elif self.attached_to is not None:
             self.atached_to.rect.move_ip(dx, 0)
 

@@ -1,12 +1,17 @@
-import pygame
+MARGIN = 40
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 1024
 
-from game import Game
-
+FPS = 60
 
 if __name__ == "__main__":
+    import pygame
+
+    from game import Game
+
     pygame.init()
 
-    surface = pygame.display.set_mode((640, 480), pygame.FULLSCREEN)
+    surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
     pygame.display.set_caption("Ball-Z")
 
     pygame.mouse.set_visible(False)
@@ -15,7 +20,7 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
 
     game = Game()
-    
+
     while True:
         game.eventloop()
 
@@ -23,7 +28,7 @@ if __name__ == "__main__":
         game.update()
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(FPS)
 
 # resolution: 640x480
 # tile size: 30x15

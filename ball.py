@@ -2,6 +2,8 @@ import math, os.path
 
 import pygame
 
+from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
+
 
 class Ball(pygame.sprite.Sprite):
     image = pygame.image.load(os.path.join("images", "ball.png"))
@@ -15,10 +17,10 @@ class Ball(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.rect = self.image.get_rect(center=(40, 177))
+        self.rect = self.image.get_rect(center=(SCREEN_WIDTH // 2, 3 * SCREEN_HEIGHT // 4))
 
         self.vx = 4
-        self.vy = 3
+        self.vy = -3
 
         self.is_attached = False
 
@@ -26,19 +28,18 @@ class Ball(pygame.sprite.Sprite):
         if not self.is_attached:
             self.rect.move_ip(self.vx, self.vy)
 
-            if self.rect.left <= 20:
-                self.rect.left = 21
+            if self.rect.left <= MARGIN:
+                self.rect.left = MARGIN
                 self.vx *= -1
-            elif self.rect.right >= 620:
-                self.rect.right = 619
+            elif self.rect.right >= SCREEN_WIDTH - MARGIN:
+                self.rect.right = SCREEN_WIDTH - MARGIN
                 self.vx *= -1
-            elif self.rect.top <= 27:
-                self.rect.top = 28
+            elif self.rect.top <= MARGIN:
+                self.rect.top = MARGIN
                 self.vy *= -1
 
-            if self.rect.top > 485:
+            if self.rect.top > SCREEN_HEIGHT + MARGIN:
                 self.kill()
-                # self.rect.top = 28
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)

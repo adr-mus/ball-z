@@ -1,4 +1,4 @@
-import time, os.path, sys
+import time, os.path, sys, math
 
 import pygame
 
@@ -6,9 +6,8 @@ from ball import Ball
 from paddle import Paddle
 from tiles import Tile
 from bonuses import Bonus
+from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
 
-
-life_image = pygame.image.load(os.path.join("images", "life.png"))
 
 pygame.font.init()
 
@@ -28,26 +27,31 @@ class Game:
 
     class Welcome:
         def __init__(self):
-            self.drawn = False
+            self.timer = None
 
         def update(self):
             pass
 
         def draw(self, surface):
-            if not self.drawn:
-                surface.fill(pygame.Color("black"))
+            if self.timer is None:
+                self.timer = pygame.time.get_ticks()
 
-                pygame.draw.aaline(surface, pygame.Color("white"), (19, 0), (19, 479), 3)
-                pygame.draw.aaline(surface, pygame.Color("white"), (621, 0), (621, 479), 3)
+            surface.fill(pygame.Color("black"))
 
-                font = pygame.font.SysFont("CourierNew", 96, bold=True)
-                score_text = font.render("BALL-Z", True, pygame.Color("white"))
-                surface.blit(score_text, (145, 100))
+            dt = pygame.time.get_ticks() - self.timer
+            c = 150 + int(100*math.sin(dt/500))
 
-                # mouse_left = pygame.image.load(os.path.join("images", "mouse_left.png"))
-                # surface.blit(mouse_left, (50, 100))
+            
+            text = pygame.font.Font("chalk.ttf", 256).render("BALL-Z", True, pygame.Color("white"))
+            x = SCREEN_WIDTH // 2 - text.get_width() // 2
+            y = (SCREEN_HEIGHT // 2 - text.get_height() // 2) // 2
+            surface.blit(text, (x, y))
 
-                self.drawn = True
+            if dt > 3000:
+                text = pygame.font.Font("chalk.ttf", 42).render("Left Click to Start", True, (c, c, c))
+                x = SCREEN_WIDTH // 2 - text.get_width() // 2
+                y = 3 * SCREEN_HEIGHT // 4
+                surface.blit(text, (x, y))
 
         def eventloop(self, game):
             for event in pygame.event.get():
@@ -57,7 +61,9 @@ class Game:
                 elif event.type == pygame.MOUSEBUTTONUP:
                     game.state = Game.RunningGame()
 
+
     class RunningGame:
+        margin = pygame.image.load(os.path.join("images", "margin.png"))
         def __init__(self):
             self.level = 1
             self.lvl = Level(self.level)
@@ -78,15 +84,16 @@ class Game:
         def draw(self, surface):
             surface.fill(pygame.Color("black"))
 
-            pygame.draw.aaline(surface, pygame.Color("white"), (19, 0), (19, 479), 3)
-            pygame.draw.aaline(surface, pygame.Color("white"), (621, 0), (621, 479), 3)
+            surface.blit(self.margin, (10, 0))
+            surface.blit(self.margin, (SCREEN_WIDTH - MARGIN, 0))
 
-            for i in range(self.lives):
-                surface.blit(life_image, (604 - i * 16, 1))
 
-            font = pygame.font.SysFont("CourierNew", 18, bold=True)
-            score_text = font.render(str(self.score), True, pygame.Color("white"))
-            surface.blit(score_text, (30, 1))
+            if self.lives > 0:
+                text = pygame.font.Font("chalk.ttf", 60).render("I" * self.lives, True, pygame.Color("white"))
+                surface.blit(text, (SCREEN_WIDTH - MARGIN - 10 - text.get_width(), int(0*5 * MARGIN)))
+
+            text = pygame.font.Font("chalk.ttf", 48).render(str(self.score), True, pygame.Color("white"))
+            surface.blit(text, (MARGIN + 10, int(0*5 * MARGIN)))
 
             self.lvl.draw(surface)
 
@@ -106,10 +113,11 @@ class Game:
 
         def eventloop(self, game):
             for event in pygame.event.get():
+                # if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
+                #     game.state = Game.Welcome()
                 if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
-                    game.state = Game.Welcome()
-                # elif event.type == pygame.MOUSEBUTTONUP:
-                #     game.state = Game.RunningGame()
+                    pygame.quit()
+                    sys.exit()
 
 
 class Level:
@@ -124,7 +132,7 @@ class Level:
             alias, x, y, *args = line.split()
             if alias not in Tile.types:
                 raise RuntimeError("invalid tile type")
-            tiles.add(Tile.types[alias](20 + 30 * int(x), 27 + 15 * int(y), *args))
+            tiles.add(Tile.types[alias](MARGIN + 60 * int(x), MARGIN + 30 * int(y), *args))
         self.tiles = tiles
 
     def draw(self, surface):

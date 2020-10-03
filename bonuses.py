@@ -3,7 +3,7 @@ import abc, random, os.path
 import pygame
 
 from ball import Ball
-# from tiles import ExplosiveTile
+from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
 
 
 class Bonus(pygame.sprite.Sprite, abc.ABC):
@@ -30,7 +30,7 @@ class Bonus(pygame.sprite.Sprite, abc.ABC):
 
     def update(self):
         self.rect.move_ip(0, self.v)
-        if self.rect.top > 485:
+        if self.rect.top > SCREEN_HEIGHT + MARGIN:
             self.kill()
 
     def draw(self, surface):
