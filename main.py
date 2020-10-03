@@ -1,22 +1,12 @@
-import sys
-
 import pygame
-from pygame.locals import *
 
 from game import Game
-
-
-def event_loop():
-    for event in pygame.event.get():
-        if event.type == KEYUP and event.key == K_ESCAPE:
-            pygame.quit()
-            sys.exit()
 
 
 if __name__ == "__main__":
     pygame.init()
 
-    surface = pygame.display.set_mode((640, 480), FULLSCREEN)
+    surface = pygame.display.set_mode((640, 480), pygame.FULLSCREEN)
     pygame.display.set_caption("Ball-Z")
 
     pygame.mouse.set_visible(False)
@@ -25,11 +15,12 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
 
     game = Game()
+    
     while True:
-        event_loop()
+        game.eventloop()
 
-        game.update()
         game.draw(surface)
+        game.update()
 
         pygame.display.flip()
         clock.tick(60)
