@@ -29,13 +29,3 @@ if __name__ == "__main__":
 
         pygame.display.flip()
         clock.tick(FPS)
-
-# resolution: 640x480
-# tile size: 30x15
-# level width: 20*30 = 600
-# margin width: (640 - 600)/2 = 20
-# level height: 20*15 = 300
-# upper margin height: 3*15 + 3 = 48
-# board space height: 7*15 = 105
-# lower margin height: 480 - (300 + 48 + 105) = 27
-# base paddle length: 72

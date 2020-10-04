@@ -8,7 +8,7 @@ from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
 class Ball(pygame.sprite.Sprite):
     image = pygame.image.load(os.path.join("images", "ball.png"))
 
-    MAXSPEED = 12
+    MAXSPEED = 18
 
     is_tiny = False
     is_fiery = False
@@ -17,10 +17,10 @@ class Ball(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.rect = self.image.get_rect(center=(SCREEN_WIDTH // 2, 3 * SCREEN_HEIGHT // 4))
+        self.rect = self.image.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
 
-        self.vx = 4
-        self.vy = -3
+        self.vx = 10
+        self.vy = -4
 
         self.is_attached = False
 
@@ -44,22 +44,32 @@ class Ball(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-    def update_v(self, alpha):
-        v_mag = math.sqrt(self.vx ** 2 + self.vy ** 2)
-        v_mag = min(self.MAXSPEED, v_mag + 0.5)
+    def on_hit(self, paddle):
+        self.rect.move_ip(-self.vx, -self.vy)
+        if self.rect.top > paddle.rect.top:
+            self.vx *= -1
+        else:
+            paddle_x = paddle.rect.center[0]
+            ball_x = self.rect.center[0]
 
-        self.vx = round(v_mag * math.cos(alpha))
-        self.vy = -round(v_mag * max(math.sin(alpha), 0.2))
+            alpha = -math.pi * (ball_x - paddle_x) / len(paddle) + math.pi / 2
+            self.rect.bottom = paddle.rect.top - 5
+
+            v_mag = math.hypot(self.vx, self.vy)
+            v_mag = min(self.MAXSPEED, v_mag + 0.5)
+
+            self.vx = round(v_mag * math.cos(alpha))
+            self.vy = -round(v_mag * max(math.sin(alpha), 0.2))
 
     def hit(self, tile):
-        if not self.is_bullet:  # FIXME: correct collistion detection
+        if not self.is_bullet:
+            self.rect.move_ip(-self.vx, -self.vy)
             x1, y1 = tile.rect.center
             x2, y2 = self.rect.center
             dx, dy = x2 - x1, y2 - y1
             if -0.5 * dx <= dy <= 0.5 * dx or 0.5 * dx <= dy <= -0.5 * dx:
-                self.vx = -self.vx
+                self.vx *= -1
             else:
-                self.vy = -self.vy
+                self.vy *= -1
 
         tile.on_hit()
-
