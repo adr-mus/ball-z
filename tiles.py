@@ -7,7 +7,7 @@ from bonuses import Bonus
 
 
 class Tile(pygame.sprite.Sprite, abc.ABC):
-    p_bonus = 0.2 # probability of a bonus being dropped
+    p_bonus = 1 # probability of a bonus being dropped
     image = None  # to be specified in subclasses
 
     # used to dynamically create a dict of form alias: a Tile subclass
@@ -26,9 +26,9 @@ class Tile(pygame.sprite.Sprite, abc.ABC):
         pygame.sprite.Sprite.__init__(self)
         self.rect = self.image.get_rect(left=x, top=y)
 
+    @abc.abstractmethod
     def on_hit(self):
-        pygame.event.post(pygame.event.Event(events.POINTS, points=5))
-        self.kill()
+        pass
 
     def soften(self):  # makes the tile killable by one hit
         pass
@@ -48,10 +48,18 @@ class RegularTile(Tile):
         color: pygame.image.load(os.path.join("images", "tiles", f"reg_{color}.png"))
         for color in ["red", "green", "blue", "yellow"]
     }
+    sounds = {"on_hit": pygame.mixer.Sound(os.path.join("sounds", "tiles", "r_death.wav"))}
+
+    sounds["on_hit"].set_volume(0.4)
 
     def __init__(self, x, y, color="green"):
         self.image = self.images[color]
         Tile.__init__(self, x, y)
+    
+    def on_hit(self):
+        self.sounds["on_hit"].play()
+        pygame.event.post(pygame.event.Event(events.POINTS, points=5))
+        self.kill()
 
 
 @Tile.register_type("g")
@@ -87,7 +95,14 @@ class GlassTile(Tile):
 #         self.n_hits = 0
 #         Tile.__init__(self)
 
-
+@Tile.register_type("e")
 class ExplosiveTile(Tile):
-    def on_hit(self, ball):
-        pass
+    image = pygame.image.load(os.path.join("images", "tiles", "reg_red.png"))
+
+    def on_hit(self):
+        pygame.event.post(pygame.event.Event(events.POINTS, points=15))
+        self.kill()
+    
+    def kill(self):
+        pygame.event.post(pygame.event.Event(events.EXPLOSION, where=self.rect.topleft))
+        Tile.kill(self)

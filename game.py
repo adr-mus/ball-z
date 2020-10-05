@@ -8,9 +8,7 @@ from paddle import Paddle
 from tiles import Tile
 from bonuses import Bonus
 from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
-
-
-pygame.font.init()
+from fonts import *
 
 
 class Game:
@@ -27,42 +25,47 @@ class Game:
         self.state.eventloop(self)
 
     class StartScreen:
+        music = pygame.mixer.Sound(os.path.join("sounds", "menu.wav"))
+
         def __init__(self):
             self.timer = None
+            self.music.play()
 
         def update(self):
             pass
 
         def draw(self, surface):
+            # timer for animations
             if self.timer is None:
                 self.timer = pygame.time.get_ticks()
+            dt = pygame.time.get_ticks() - self.timer
 
+            # background
             surface.fill(pygame.Color("black"))
 
-            dt = pygame.time.get_ticks() - self.timer
-            c = 150 + int(100 * math.sin(dt / 500))
-
-            text = pygame.font.Font("chalk.ttf", 256).render(
-                "BALL-Z", True, pygame.Color("white")
-            )
+            # title
+            c = min(int(255 * dt / 5000), 255)
+            text = title_font.render("BALL-Z", True, (c, c, c))
             x = SCREEN_WIDTH // 2 - text.get_width() // 2
             y = (SCREEN_HEIGHT // 2 - text.get_height() // 2) // 2
             surface.blit(text, (x, y))
 
-            if dt > 3000:
-                text = pygame.font.Font("chalk.ttf", 42).render(
-                    "Left Click to Start", True, (c, c, c)
-                )
+            # instruction
+            if dt > 6000:
+                c = 150 + int(100 * math.sin(dt / 500))
+                text = message_font.render("Left Click to Start", True, (c, c, c))
                 x = SCREEN_WIDTH // 2 - text.get_width() // 2
                 y = 3 * SCREEN_HEIGHT // 4
                 surface.blit(text, (x, y))
 
         def eventloop(self, game):
             for event in pygame.event.get():
-                if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
                 elif event.type == pygame.MOUSEBUTTONUP:
+                    self.music.fadeout(1000)
                     game.state = Game.RunningGame()
 
     class RunningGame:
@@ -81,8 +84,8 @@ class Game:
                 self.lvl.update()
                 if not self.lvl.balls:
                     self.on_death()
-                elif not self.lvl.tiles:
-                    self.lvl_finished = True
+                # elif not self.lvl.tiles:
+                #     self.lvl_finished = True
                 else:
                     self.lvl.detect_collisions()
 
@@ -96,40 +99,29 @@ class Game:
 
             # lives
             if self.lives > 0:
-                text = pygame.font.Font("chalk.ttf", 60).render(
-                    "I" * self.lives, True, pygame.Color("white")
-                )
+                lives = "I" * self.lives
+                text = message_font.render(lives, True, pygame.Color("white"))
                 surface.blit(text, (SCREEN_WIDTH - MARGIN - 10 - text.get_width(), 1))
 
             # score
-            text = pygame.font.Font("chalk.ttf", 48).render(
-                str(self.score), True, pygame.Color("white")
-            )
+            text = regular_font.render(str(self.score), True, pygame.Color("white"))
             surface.blit(text, (MARGIN + 10, 1))
 
             # balls, tiles, paddle, bonuses
             self.lvl.draw(surface)
 
-            # optional text
+            # conditional text
             if self.lvl_finished:
-                text = pygame.font.Font("chalk.ttf", 72).render(
-                    "Level Cleared!", True, pygame.Color("white")
-                )
+                message = "Level Cleared!"
+                text = message_font.render(message, True, pygame.Color("white"))
                 w, h = text.get_size()
-                surface.blit(
-                    text,
-                    ((SCREEN_WIDTH - w) // 2, (SCREEN_HEIGHT - h) // 2),
-                )
-
+                x, y = (SCREEN_WIDTH - w) // 2, (SCREEN_HEIGHT - h) // 2
+                surface.blit(text, (x, y))
             if self.paused:
-                text = pygame.font.Font("chalk.ttf", 72).render(
-                    "Pause", True, pygame.Color("white")
-                )
+                text = message_font.render("Pause", True, pygame.Color("white"))
                 w, h = text.get_size()
-                surface.blit(
-                    text,
-                    ((SCREEN_WIDTH - w) // 2, (SCREEN_HEIGHT - h) // 2),
-                )
+                x, y = (SCREEN_WIDTH - w) // 2, (SCREEN_HEIGHT - h) // 2
+                surface.blit(text, (x, y))
 
         def on_death(self):
             self.lives -= 1
@@ -172,30 +164,75 @@ class Game:
                     self.score += event.points
                 elif self.lvl_finished and event.type == pygame.MOUSEBUTTONUP:
                     self.next_level()
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    for ball in self.lvl.paddle.attached_balls:
+                        ball.on_hit(self.lvl.paddle)
+                    self.lvl.paddle.attached_balls.clear()
+                elif event.type == events.EXPLOSION:
+                    x, y = event.where
+                    i, j = (x - MARGIN) // 60, (y - 3 * MARGIN) // 30
+                    self.lvl.explosion(i, j)
                 elif event.type == events.DEFEAT or event.type == events.VICTORY:
                     final_score = self.score + (self.n_lvl - 1) * 1000
                     game.state = Game.Ranking(final_score)
 
     class Ranking:
         pass
+        # def update(self):
+        #     pass
+
+        # def draw(self, surface):
+        #     if self.timer is None:
+        #         self.timer = pygame.time.get_ticks()
+
+        #     surface.fill(pygame.Color("black"))
+
+        #     dt = pygame.time.get_ticks() - self.timer
+        #     c = 150 + int(100 * math.sin(dt / 500))
+
+        #     text = pygame.font.Font("chalk.ttf", 48).render(
+        #         "Best Scores", True, pygame.Color("white")
+        #     )
+        #     x = SCREEN_WIDTH // 2 - text.get_width() // 2
+        #     y = (SCREEN_HEIGHT // 2 - text.get_height() // 2) // 4
+        #     surface.blit(text, (x, y))
+
+        #     if dt > 3000:
+        #         text = pygame.font.Font("chalk.ttf", 42).render(
+        #             "Left Click to Start", True, (c, c, c)
+        #         )
+        #         x = SCREEN_WIDTH // 2 - text.get_width() // 2
+        #         y = 3 * SCREEN_HEIGHT // 4
+        #         surface.blit(text, (x, y))
+
+        # def eventloop(self, game):
+        #     for event in pygame.event.get():
+        #         if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
+        #             pygame.quit()
+        #             sys.exit()
+        #         elif event.type == pygame.MOUSEBUTTONUP:
+        #             game.state = Game.RunningGame()
 
 
 class Level:
-    def __init__(self, i):
+    def __init__(self, n):
         self.paddle = Paddle()
         self.balls = pygame.sprite.Group()
-        self.balls.add(Ball())
+        ball = Ball()
+        self.balls.add(ball)
+        self.paddle.attached_balls.add(ball)
         self.bonuses = pygame.sprite.Group()
 
-        tiles = pygame.sprite.Group()
-        for line in open(os.path.join("levels", f"{i}.txt")):
-            alias, x, y, *args = line.split()
+        self.tile_matrix = [[None for _ in range(20)] for _ in range(20)]
+        self.tiles = pygame.sprite.Group()
+        for line in open(os.path.join("levels", f"{n}.txt")):
+            alias, i, j, *args = line.split()
             if alias not in Tile.types:
                 raise RuntimeError("invalid tile type")
-            tiles.add(
-                Tile.types[alias](MARGIN + 60 * int(x), MARGIN + 30 * int(y), *args)
-            )
-        self.tiles = tiles
+            i, j = int(i), int(j)
+            tile = Tile.types[alias](MARGIN + 60 * i, 3 * MARGIN + 30 * j, *args)
+            self.tile_matrix[i][j] = tile
+            self.tiles.add(tile)
 
     def draw(self, surface):
         self.paddle.draw(surface)
@@ -224,12 +261,27 @@ class Level:
             for tile in pygame.sprite.spritecollide(ball, self.tiles, dokill=False):
                 ball.hit(tile)
                 break
+    
+    def explosion(self, i, j):
+        for k in range(-1, 2):
+            for l in range(-1, 2):
+                try:
+                    tile = self.tile_matrix[i + k][j + l]
+                    if tile.alive():
+                        tile.kill()
+                except (AttributeError, IndexError):
+                    pass
 
     def on_death(self):
         time.sleep(1)
 
+        # refresh paddle, ball, delete bonuses
         self.paddle = Paddle()
-
-        Ball.is_bullet = False
         self.balls.empty()
-        self.balls.add(Ball())
+        ball = Ball()
+        self.balls.add(ball)
+        self.paddle.attached_balls.add(ball)
+        self.bonuses.empty()
+
+        # reset bonuses
+        Ball.is_bullet = False

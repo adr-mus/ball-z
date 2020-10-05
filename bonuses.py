@@ -42,8 +42,8 @@ class Bonus(pygame.sprite.Sprite, abc.ABC):
 
     @classmethod
     def random_bonus(cls, x0, y0):
-        # cls.game.lvl.bonuses.add(Soften(x0, y0))
-        bonus = random.choices(cls.__types, cls.__weights)[0](x0, y0)
+        bonus = FireBall(x0, y0)
+        # bonus = random.choices(cls.__types, cls.__weights)[0](x0, y0)
         pygame.event.post(pygame.event.Event(events.BONUS_DROPPED, bonus=bonus))
 
 
@@ -140,10 +140,12 @@ class Bullet(Bonus):
 
 
 # @Bonus.register_type(3)
-# class FireBall(Bonus):
-#     @classmethod
-# def on_collect(cls):
-#         cls.game.balls[0].__class__.is_fiery = True
+class FireBall(Bonus):
+    image = pygame.image.load(os.path.join("images", "bonuses", "fireball.png"))
+
+    @staticmethod
+    def take_effect(game):
+        Ball.is_fiery = True
 
 
 # @Bonus.register_type(3)
@@ -170,18 +172,13 @@ class Split(Bonus):
 
 
 ############ paddle ############
-# @Bonus.register_type(4)
-# class Magnet(Bonus):
-#     @classmethod
-# def on_collect(cls):
-#         cls.game.level.paddle.is_magnetic = True
+@Bonus.register_type(4)
+class Magnet(Bonus):
+    image = pygame.image.load(os.path.join("images", "bonuses", "magnet.png"))
 
-
-# @Bonus.register_type(3)
-# class Guns(Bonus):
-#     @classmethod
-# def on_collect(cls):
-#         cls.game.level.paddle.is_shooting = True
+    @staticmethod
+    def take_effect(game):
+        game.lvl.paddle.is_magnetic = True
 
 
 @Bonus.register_type(5)
@@ -191,7 +188,7 @@ class Enlarge(Bonus):
     @staticmethod
     def take_effect(game):
         paddle = game.lvl.paddle
-        paddle.len = max(paddle.len + 1, 4)
+        paddle.len = min(paddle.len + 1, 4)
         w, h = paddle.base_image.get_size()
         paddle.image = pygame.transform.scale(
             paddle.base_image, (int(w * 2 ** paddle.len), h)
