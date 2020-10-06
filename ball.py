@@ -2,21 +2,20 @@ import math, os.path
 
 import pygame
 
-from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
 import events
+from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
 
 pygame.mixer.init(buffer=128)
 
 
 class Ball(pygame.sprite.Sprite):
-    image = pygame.image.load(os.path.join("images", "ball.png"))
+    base_image = pygame.image.load(os.path.join("images", "ball.png"))
+    image = base_image
     sounds = {"paddle_hit": pygame.mixer.Sound(os.path.join("sounds", "paddle.ogg")),
-              "wall_hit": pygame.mixer.Sound(os.path.join("sounds", "ball", "wall_hit.wav")),
-              "death": pygame.mixer.Sound(os.path.join("sounds", "ball", "death.wav"))}
+              "wall_hit": pygame.mixer.Sound(os.path.join("sounds", "wall_hit.wav"))}
         
     # sound adjustments
     sounds["paddle_hit"].set_volume(0.1)
-    sounds["wall_hit"].set_volume(0.5)
 
     MAXSPEED = 24
 
@@ -52,7 +51,6 @@ class Ball(pygame.sprite.Sprite):
                 self.vy *= -1
 
             if self.rect.top > SCREEN_HEIGHT + MARGIN:
-                self.sounds["death"].play()
                 self.kill()
 
     def draw(self, surface):
@@ -85,17 +83,17 @@ class Ball(pygame.sprite.Sprite):
                 self.vy = -round(v_mag * max(math.sin(alpha), 0.2))
 
     def hit(self, tile):
-        if not self.is_bullet:
-            self.rect.move_ip(-self.vx, -self.vy)
-            x1, y1 = tile.rect.center
-            x2, y2 = self.rect.center
-            dx, dy = x2 - x1, y2 - y1
-            if -0.5 * dx <= dy <= 0.5 * dx or 0.5 * dx <= dy <= -0.5 * dx:
-                self.vx *= -1
-            else:
-                self.vy *= -1
+        self.rect.move_ip(-self.vx, -self.vy)
+        x1, y1 = tile.rect.center
+        x2, y2 = self.rect.center
+        dx, dy = x2 - x1, y2 - y1
+        if  -dx <= 2 * dy <= dx or dx <= 2 * dy <= -dx:
+            self.vx *= -1
+        else:
+            self.vy *= -1
         
         if self.is_fiery:
+            tile.kill()
             pygame.event.post(pygame.event.Event(events.EXPLOSION, where=tile.rect.topleft))
         else:
             tile.on_hit()

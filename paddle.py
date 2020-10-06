@@ -17,8 +17,9 @@ class Paddle(pygame.sprite.Sprite):
             center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - MARGIN)
         )
 
-        self.shoots = False
         self.is_magnetic = False
+        self.is_confused = False
+
 
         self.attached_balls = set()
 
@@ -27,6 +28,8 @@ class Paddle(pygame.sprite.Sprite):
 
     def update(self):
         dx = pygame.mouse.get_rel()[0]
+        if self.is_confused:
+            dx *= -1
         left, right = self.rect.left, self.rect.right
         self.rect.move_ip(dx, 0)
         if self.rect.left <= MARGIN:

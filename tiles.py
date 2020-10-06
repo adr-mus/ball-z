@@ -7,7 +7,7 @@ from bonuses import Bonus
 
 
 class Tile(pygame.sprite.Sprite, abc.ABC):
-    p_bonus = 1 # probability of a bonus being dropped
+    p_bonus = 0.2 # probability of a bonus being dropped
     image = None  # to be specified in subclasses
 
     # used to dynamically create a dict of form alias: a Tile subclass
@@ -30,10 +30,10 @@ class Tile(pygame.sprite.Sprite, abc.ABC):
     def on_hit(self):
         pass
 
-    def soften(self):  # makes the tile killable by one hit
-        pass
-
     def kill(self):
+        # base point value
+        pygame.event.post(pygame.event.Event(events.POINTS, points=5))
+
         # roll a bonus
         if random.random() < self.p_bonus:
             Bonus.random_bonus(*self.rect.center)
@@ -44,65 +44,86 @@ class Tile(pygame.sprite.Sprite, abc.ABC):
 
 @Tile.register_type("r")
 class RegularTile(Tile):
-    images = {
-        color: pygame.image.load(os.path.join("images", "tiles", f"reg_{color}.png"))
-        for color in ["red", "green", "blue", "yellow"]
-    }
-    sounds = {"on_hit": pygame.mixer.Sound(os.path.join("sounds", "tiles", "r_death.wav"))}
+    image = pygame.image.load(os.path.join("images", "tiles", "regular.png"))
+    sound = pygame.mixer.Sound(os.path.join("sounds", "r_death.wav"))
 
-    sounds["on_hit"].set_volume(0.4)
-
-    def __init__(self, x, y, color="green"):
-        self.image = self.images[color]
-        Tile.__init__(self, x, y)
+    sound.set_volume(0.4)
     
     def on_hit(self):
-        self.sounds["on_hit"].play()
-        pygame.event.post(pygame.event.Event(events.POINTS, points=5))
+        self.sound.play()
         self.kill()
 
 
 @Tile.register_type("g")
 class GlassTile(Tile):
-    image_intact = pygame.image.load(os.path.join("images", "tiles", "glass.png"))
-    image_hit = pygame.image.load(os.path.join("images", "tiles", "glass_broken.png"))
+    images = {"base": pygame.image.load(os.path.join("images", "tiles", "glass.png")),
+              "hit": pygame.image.load(os.path.join("images", "tiles", "broken.png"))}
+    sounds = {"hit": pygame.mixer.Sound(os.path.join("sounds", "g_hit.wav")),
+              "death": pygame.mixer.Sound(os.path.join("sounds", "g_death.wav"))}
+
+    sounds["hit"].set_volume(0.1)
+    sounds["death"].set_volume(0.1)
 
     def __init__(self, x, y):
-        self.image = self.image_intact
+        self.image = self.images["base"]
         self.hit = False
         Tile.__init__(self, x, y)
 
-    def soften(self):
-        self.image = self.image_hit
-        self.hit = True
-
     def on_hit(self):
-        pygame.event.post(pygame.event.Event(events.POINTS, points=5))
         if not self.hit:
-            self.soften()
+            self.sounds["hit"].play()
+            pygame.event.post(pygame.event.Event(events.POINTS, points=5))
+            self.image = self.images["hit"]
+            self.hit = True
         else:
+            self.sounds["death"].play()
             self.kill()
 
 
-# class Brick(Tile):
-#     def __init__(self):
-#         self.hit = False
-#         Tile.__init__(self)
+@Tile.register_type("b")
+class Brick(Tile):
+    image = pygame.image.load(os.path.join("images", "tiles", "brick.png"))
+    sound = pygame.mixer.Sound(os.path.join("sounds", "wall_hit.wav"))
+    
+    def on_hit(self):
+        self.sound.play()
 
 
-# class TripleTile(Tile):
-#     def __init__(self):
-#         self.n_hits = 0
-#         Tile.__init__(self)
+@Tile.register_type("u")
+class UnstableTile(Tile):
+    images = {"base": pygame.image.load(os.path.join("images", "tiles", "unstable.png")),
+              "hit": pygame.image.load(os.path.join("images", "tiles", "explosive.png"))}
+    sound = pygame.mixer.Sound(os.path.join("sounds", "u_hit.wav"))
+    
+    def __init__(self, x, y):
+        self.hit = False
+        self.image = self.images["base"]
+        Tile.__init__(self, x, y)
+
+    def on_hit(self):
+        if not self.hit:
+            pygame.event.post(pygame.event.Event(events.POINTS, points=5))
+            self.sound.play()
+            self.hit = True
+            self.image = self.images["hit"]
+        else:
+            self.kill()
+    
+    def kill(self):
+        pygame.event.post(pygame.event.Event(events.POINTS, points=10))
+        pygame.event.post(pygame.event.Event(events.EXPLOSION, where=self.rect.topleft))
+        Tile.kill(self)
+
 
 @Tile.register_type("e")
 class ExplosiveTile(Tile):
-    image = pygame.image.load(os.path.join("images", "tiles", "reg_red.png"))
+    image = pygame.image.load(os.path.join("images", "tiles", "explosive.png"))
 
     def on_hit(self):
-        pygame.event.post(pygame.event.Event(events.POINTS, points=15))
         self.kill()
     
     def kill(self):
+        pygame.event.post(pygame.event.Event(events.POINTS, points=10))
         pygame.event.post(pygame.event.Event(events.EXPLOSION, where=self.rect.topleft))
         Tile.kill(self)
+        

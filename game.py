@@ -3,12 +3,13 @@ import time, os.path, sys, math
 import pygame
 
 import events
+from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
+from fonts import *
 from ball import Ball
 from paddle import Paddle
 from tiles import Tile
 from bonuses import Bonus
-from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
-from fonts import *
+from explosion import Explosion
 
 
 class Game:
@@ -29,19 +30,22 @@ class Game:
 
         def __init__(self):
             self.timer = None
-            self.music.play()
 
         def update(self):
             pass
 
         def draw(self, surface):
-            # timer for animations
-            if self.timer is None:
-                self.timer = pygame.time.get_ticks()
-            dt = pygame.time.get_ticks() - self.timer
-
             # background
             surface.fill(pygame.Color("black"))
+
+            # timer for animations and music
+            if self.timer is None:
+                self.timer = pygame.time.get_ticks()
+                self.music.play(loops=-1)
+            dt = pygame.time.get_ticks() - self.timer
+
+            # volume
+            self.music.set_volume((dt / 6000) ** 2)
 
             # title
             c = min(int(255 * dt / 5000), 255)
@@ -52,8 +56,8 @@ class Game:
 
             # instruction
             if dt > 6000:
-                c = 150 + int(100 * math.sin(dt / 500))
-                text = message_font.render("Left Click to Start", True, (c, c, c))
+                c = 150 + int(100 * math.sin((dt - 6000 - 250*math.pi) / 500))
+                text = regular_font.render("Left Click to Start", True, (c, c, c))
                 x = SCREEN_WIDTH // 2 - text.get_width() // 2
                 y = 3 * SCREEN_HEIGHT // 4
                 surface.blit(text, (x, y))
@@ -100,7 +104,7 @@ class Game:
             # lives
             if self.lives > 0:
                 lives = "I" * self.lives
-                text = message_font.render(lives, True, pygame.Color("white"))
+                text = regular_font.render(lives, True, pygame.Color("white"))
                 surface.blit(text, (SCREEN_WIDTH - MARGIN - 10 - text.get_width(), 1))
 
             # score
@@ -124,15 +128,13 @@ class Game:
                 surface.blit(text, (x, y))
 
         def on_death(self):
+            self.lvl.on_death()
             self.lives -= 1
             if self.lives < 0:
                 self.on_defeat()
-            else:
-                self.lvl.on_death()
-
+                
         def on_defeat(self):  # TO BE UPDATED
             self.lives += 1
-            self.lvl.on_death()
 
         def next_level(self):
             self.n_lvl += 1
@@ -169,9 +171,7 @@ class Game:
                         ball.on_hit(self.lvl.paddle)
                     self.lvl.paddle.attached_balls.clear()
                 elif event.type == events.EXPLOSION:
-                    x, y = event.where
-                    i, j = (x - MARGIN) // 60, (y - 3 * MARGIN) // 30
-                    self.lvl.explosion(i, j)
+                    self.lvl.explosion(*event.where)
                 elif event.type == events.DEFEAT or event.type == events.VICTORY:
                     final_score = self.score + (self.n_lvl - 1) * 1000
                     game.state = Game.Ranking(final_score)
@@ -215,6 +215,10 @@ class Game:
 
 
 class Level:
+    explosion_sound = pygame.mixer.Sound(os.path.join("sounds", "explode.wav"))
+    death_sound = pygame.mixer.Sound(os.path.join("sounds", "death.wav"))
+
+    explosion_sound.set_volume(0.5)
     def __init__(self, n):
         self.paddle = Paddle()
         self.balls = pygame.sprite.Group()
@@ -222,6 +226,7 @@ class Level:
         self.balls.add(ball)
         self.paddle.attached_balls.add(ball)
         self.bonuses = pygame.sprite.Group()
+        self.explosions = pygame.sprite.Group()
 
         self.tile_matrix = [[None for _ in range(20)] for _ in range(20)]
         self.tiles = pygame.sprite.Group()
@@ -230,7 +235,7 @@ class Level:
             if alias not in Tile.types:
                 raise RuntimeError("invalid tile type")
             i, j = int(i), int(j)
-            tile = Tile.types[alias](MARGIN + 60 * i, 3 * MARGIN + 30 * j, *args)
+            tile = Tile.types[alias](MARGIN + 60 * i, 3 * MARGIN + 30 * j)
             self.tile_matrix[i][j] = tile
             self.tiles.add(tile)
 
@@ -239,11 +244,13 @@ class Level:
         self.balls.draw(surface)
         self.tiles.draw(surface)
         self.bonuses.draw(surface)
+        self.explosions.draw(surface)
 
     def update(self):
         self.paddle.update()
         self.balls.update()
         self.bonuses.update()
+        self.explosions.update()
 
     def detect_collisions(self):
         # paddle vs. balls
@@ -262,19 +269,28 @@ class Level:
                 ball.hit(tile)
                 break
     
-    def explosion(self, i, j):
+    def explosion(self, x, y):
+        self.explosion_sound.play()
+        i, j = (x - MARGIN) // 60, (y - 3 * MARGIN) // 30
         for k in range(-1, 2):
             for l in range(-1, 2):
                 try:
                     tile = self.tile_matrix[i + k][j + l]
+                    self.explosions.add(Explosion(MARGIN + 60 * (i + k) + 30, 3 * MARGIN + 30 * (j + l) + 15))
                     if tile.alive():
                         tile.kill()
                 except (AttributeError, IndexError):
                     pass
 
     def on_death(self):
+        self.death_sound.play()
         time.sleep(1)
 
+        # reset bonuses
+        Ball.is_bullet = False
+        Ball.is_fiery = False
+        Ball.image = Ball.base_image
+        
         # refresh paddle, ball, delete bonuses
         self.paddle = Paddle()
         self.balls.empty()
@@ -282,6 +298,5 @@ class Level:
         self.balls.add(ball)
         self.paddle.attached_balls.add(ball)
         self.bonuses.empty()
+        
 
-        # reset bonuses
-        Ball.is_bullet = False
