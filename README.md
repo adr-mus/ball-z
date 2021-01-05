@@ -10,4 +10,4 @@ Additional controls:
 - P (in game): pause/unpause the game,
 - Esc: exit to the start screen, exit game if already there.
 
-All graphics are mine. Font and sound effects were taken from open repositories.
+All graphics are mine. Fonts and sound effects were taken from open repositories.
