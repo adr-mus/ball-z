@@ -1,3 +1,5 @@
+""" Module defining all bonuses. """
+
 import abc, random, os.path, math
 
 import pygame
@@ -7,30 +9,54 @@ from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
 from ball import Ball
 
 
-class Bonus(pygame.sprite.Sprite, abc.ABC):
+def random_bonus(x0, y0):
+    """ Used to roll a bonus after a tile has been hit. """
+    bonus = random.choices(Bonus.types, Bonus.weights)[0](x0, y0)
+    pygame.event.post(pygame.event.Event(events.BONUS_DROPPED, bonus=bonus))
+
+
+class Bonus(abc.ABC, pygame.sprite.Sprite):
+    """ Base Bonus class. Each subclass must be decorated with the register_type
+        method in order for the new bonus to appear in the game. This way, each
+        bonus has an associated weight used later for picking a random bonus when 
+        a tile is hit. """
     image = None  # to be specified in subclasses
     sounds = {"positive": pygame.mixer.Sound(os.path.join("sounds", "positive.wav")),
               "negative": pygame.mixer.Sound(os.path.join("sounds", "negative.wav"))}
 
+    # sound adjustments
     sounds["positive"].set_volume(0.1)
     sounds["negative"].set_volume(0.1)
 
-    __types = []  # used for rolling
-    __weights = []  # different bonuses have different probabilities
+    # used for rolling
+    types = []  
+    weights = []
 
-    @staticmethod  # used to dynamically add new bonuses to the pool
+    @staticmethod
     def register_type(weight):
+        """ Used as a decorator to dynamically add new bonuses to the pool. """
         def wrapper(subcls):
-            Bonus.__types.append(subcls)
-            Bonus.__weights.append(weight)
+            Bonus.types.append(subcls)
+            Bonus.weights.append(weight)
             return subcls
 
         return wrapper
 
+    @classmethod
+    def on_collect(cls):
+        """ Triggered when a bonus is collected. """
+        pygame.event.post(pygame.event.Event(events.POINTS, points=100))
+        pygame.event.post(pygame.event.Event(events.BONUS_COLLECTED, bonus=cls))
+
+    @abc.abstractclassmethod
+    def take_effect(cls, game):
+        """ Defines what happens when a particular bonus is collected. """
+        pass
+
     def __init__(self, x0, y0):
         pygame.sprite.Sprite.__init__(self)
         self.rect = self.image.get_rect(center=(x0, y0))
-        self.v = random.randrange(4, 11)
+        self.v = random.randrange(4, 9)
 
     def update(self):
         self.rect.move_ip(0, self.v)
@@ -40,21 +66,11 @@ class Bonus(pygame.sprite.Sprite, abc.ABC):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-    @classmethod
-    def on_collect(cls):
-        pygame.event.post(pygame.event.Event(events.POINTS, points=100))
-        pygame.event.post(pygame.event.Event(events.BONUS_COLLECTED, bonus=cls))
-
-    @classmethod
-    def random_bonus(cls, x0, y0):
-        # bonus = Explode(x0, y0)
-        bonus = random.choices(cls.__types, cls.__weights)[0](x0, y0)
-        pygame.event.post(pygame.event.Event(events.BONUS_DROPPED, bonus=bonus))
-
 
 ############ general ############
 @Bonus.register_type(3)
 class Death(Bonus):
+    """ Immediate death. """
     image = pygame.image.load(os.path.join("images", "bonuses", "death.png"))
 
     @classmethod
@@ -62,37 +78,24 @@ class Death(Bonus):
         game.on_death()
 
 
-@Bonus.register_type(2)
+@Bonus.register_type(1)
 class Life(Bonus):
+    """ Extra life. """
     image = pygame.image.load(os.path.join("images", "bonuses", "life.png"))
-    sound = pygame.mixer.Sound(os.path.join("sounds", "life.wav"))
 
     @classmethod
     def take_effect(cls, game):
-        cls.sound.play()
+        cls.sounds["positive"].play()
         if game.lives == 4:
             game.score += 900
         else:
             game.lives += 1
 
 
-@Bonus.register_type(4)
-class Explode(Bonus):
-    image = pygame.image.load(os.path.join("images", "bonuses", "explode.png"))
-
-    @classmethod
-    def take_effect(cls, game):
-        from tiles import ExplosiveTile, UnstableTile
-
-        cls.sounds["positive"].play()
-        for tile in game.lvl.tiles:
-            if isinstance(tile, ExplosiveTile) or isinstance(tile, UnstableTile) and tile.hit:
-                tile.kill()
-
-
 ############ ball ############
 @Bonus.register_type(4)
 class SpeedUp(Bonus):
+    """ Sets the speed of all balls to the max. """
     image = pygame.image.load(os.path.join("images", "bonuses", "speedup.png"))
 
     @classmethod
@@ -106,31 +109,19 @@ class SpeedUp(Bonus):
 
 @Bonus.register_type(3)
 class FireBall(Bonus):
+    """ Whenever a tile is hit, it explodes. """
     image = pygame.image.load(os.path.join("images", "bonuses", "fireball.png"))
 
     @classmethod
     def take_effect(cls, game):
         cls.sounds["positive"].play()
+        Ball.image = Ball.images["fiery"]
         Ball.is_fiery = True
-
-
-@Bonus.register_type(3)
-class Tiny(Bonus):
-    image = pygame.image.load(os.path.join("images", "bonuses", "tiny.png"))
-
-    @classmethod
-    def take_effect(cls, game):
-        cls.sounds["negative"].play()
-        w, h = Ball.base_image.get_size()
-        Ball.image = pygame.transform.scale(
-            Ball.base_image, (w // 2, h // 2)
-        )
-        for ball in game.lvl.balls:
-            ball.rect = ball.image.get_rect(center=ball.rect.center)
 
 
 @Bonus.register_type(4)
 class Split(Bonus):
+    """ Doubles the number of balls. """
     image = pygame.image.load(os.path.join("images", "bonuses", "split.png"))
 
     @classmethod
@@ -139,7 +130,9 @@ class Split(Bonus):
         new_balls = pygame.sprite.Group()
         for ball in game.lvl.balls:
             new_ball = Ball()
-            new_ball.is_attached = False
+            new_ball.is_attached = ball.is_attached
+            if ball.is_attached:
+                game.lvl.paddle.attached_balls.add(new_ball)
             new_ball.rect.center = ball.rect.center
             new_ball.vx, new_ball.vy = -ball.vx, ball.vy
             new_balls.add(ball)
@@ -150,52 +143,49 @@ class Split(Bonus):
 ############ paddle ############
 @Bonus.register_type(4)
 class Magnet(Bonus):
+    """ The paddle can now capture balls and release them at will. """
     image = pygame.image.load(os.path.join("images", "bonuses", "magnet.png"))
 
     @classmethod
     def take_effect(cls, game):
         cls.sounds["positive"].play()
-        game.lvl.paddle.is_magnetic = True
+        paddle = game.lvl.paddle
+        paddle.image = paddle.images["magnetic"]
+        paddle.resize(paddle.len)
+        paddle.is_magnetic = True
 
 
 @Bonus.register_type(5)
 class Enlarge(Bonus):
+    """ Doubles the length of the paddle. """
     image = pygame.image.load(os.path.join("images", "bonuses", "enlarge.png"))
 
     @classmethod
     def take_effect(cls, game):
         cls.sounds["positive"].play()
         paddle = game.lvl.paddle
-        paddle.len = min(paddle.len + 1, 4)
-        w, h = paddle.base_image.get_size()
-        paddle.image = pygame.transform.scale(
-            paddle.base_image, (int(w * 2 ** paddle.len), h)
-        )
-        paddle.rect = paddle.image.get_rect(center=paddle.rect.center)
+        paddle.resize(min(paddle.len + 1, 2))
 
 
 @Bonus.register_type(5)
 class Shrink(Bonus):
+    """ Halves the length of the paddle. """
     image = pygame.image.load(os.path.join("images", "bonuses", "shrink.png"))
 
     @classmethod
     def take_effect(cls, game):
         cls.sounds["negative"].play()
         paddle = game.lvl.paddle
-        paddle.len = max(paddle.len - 1, -2)
-        w, h = paddle.base_image.get_size()
-        paddle.image = pygame.transform.scale(
-            paddle.base_image, (int(w * 2 ** paddle.len), h)
-        )
-        paddle.rect = paddle.image.get_rect(center=paddle.rect.center)
+        paddle.resize(max(paddle.len - 1, -2))
 
 
-@Bonus.register_type(5)
+@Bonus.register_type(4)
 class Confuse(Bonus):
+    """ The paddle moves in the opposite x-direction to the mouse. """
     image = pygame.image.load(os.path.join("images", "bonuses", "confuse.png"))
 
     @classmethod
     def take_effect(cls, game):
         cls.sounds["negative"].play()
-        game.lvl.paddle.is_confused = True
+        game.lvl.paddle.is_confused = not game.lvl.paddle.is_confused
         

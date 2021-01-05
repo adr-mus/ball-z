@@ -1,6 +1,8 @@
-MARGIN = 40
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 1024
+""" Top level script used to run the game. """
+
+# screen settings
+MARGIN = 32
+SCREEN_WIDTH, SCREEN_HEIGHT = 1024, 768
 
 FPS = 60
 

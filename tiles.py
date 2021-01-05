@@ -1,21 +1,25 @@
+""" Module containing all tile types. """
 import abc, os.path, random
 
 import pygame
 
 import events
-from bonuses import Bonus
+from bonuses import random_bonus
 
 
-class Tile(pygame.sprite.Sprite, abc.ABC):
-    p_bonus = 0.2 # probability of a bonus being dropped
+class Tile(abc.ABC, pygame.sprite.Sprite):
+    """ Base Tile class. Each subclass must be decorated with the register_type
+        method in order for the Level class to know the mapping between in-file
+        names of tiles and their corresponding classes. """
+    p_bonus = 0.1 # probability of a bonus being dropped
     image = None  # to be specified in subclasses
 
-    # used to dynamically create a dict of form alias: a Tile subclass
-    # aliases are used to build levels from txt files
-    types = {}
+    types = {} # the mapping between tile aliases and their corresponding classes
 
     @staticmethod
     def register_type(alias):
+        """ Used to dynamically create the mapping between in-file tile names
+            and their corresponding classes (Tile subclasses). """
         def wrapper(subcls):
             Tile.types[alias] = subcls
             return subcls
@@ -28,6 +32,7 @@ class Tile(pygame.sprite.Sprite, abc.ABC):
 
     @abc.abstractmethod
     def on_hit(self):
+        """ Defines what happens when a particular tile is hit. """
         pass
 
     def kill(self):
@@ -36,7 +41,7 @@ class Tile(pygame.sprite.Sprite, abc.ABC):
 
         # roll a bonus
         if random.random() < self.p_bonus:
-            Bonus.random_bonus(*self.rect.center)
+            random_bonus(*self.rect.center)
 
         # kill the tile
         pygame.sprite.Sprite.kill(self)
@@ -44,6 +49,7 @@ class Tile(pygame.sprite.Sprite, abc.ABC):
 
 @Tile.register_type("r")
 class RegularTile(Tile):
+    """ Basic tile. Takes one hit to destroy. """
     image = pygame.image.load(os.path.join("images", "tiles", "regular.png"))
     sound = pygame.mixer.Sound(os.path.join("sounds", "r_death.wav"))
 
@@ -56,6 +62,8 @@ class RegularTile(Tile):
 
 @Tile.register_type("g")
 class GlassTile(Tile):
+    """ Invisible tile that becomes visible after the first hit. After another hit
+        the tile gets destroyed but the ball doesn't change its direction. """
     images = {"base": pygame.image.load(os.path.join("images", "tiles", "glass.png")),
               "hit": pygame.image.load(os.path.join("images", "tiles", "broken.png"))}
     sounds = {"hit": pygame.mixer.Sound(os.path.join("sounds", "g_hit.wav")),
@@ -82,6 +90,7 @@ class GlassTile(Tile):
 
 @Tile.register_type("b")
 class Brick(Tile):
+    """ Tile that basic ball can't destroy. """
     image = pygame.image.load(os.path.join("images", "tiles", "brick.png"))
     sound = pygame.mixer.Sound(os.path.join("sounds", "wall_hit.wav"))
     
@@ -91,6 +100,7 @@ class Brick(Tile):
 
 @Tile.register_type("u")
 class UnstableTile(Tile):
+    """ After a hit becomes explosive. """
     images = {"base": pygame.image.load(os.path.join("images", "tiles", "unstable.png")),
               "hit": pygame.image.load(os.path.join("images", "tiles", "explosive.png"))}
     sound = pygame.mixer.Sound(os.path.join("sounds", "u_hit.wav"))
@@ -117,6 +127,7 @@ class UnstableTile(Tile):
 
 @Tile.register_type("e")
 class ExplosiveTile(Tile):
+    """ Explodes when hit. """
     image = pygame.image.load(os.path.join("images", "tiles", "explosive.png"))
 
     def on_hit(self):
