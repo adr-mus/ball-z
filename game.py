@@ -227,7 +227,7 @@ class Game:
                     surface.blit(dot, (x, y))
                 else:
                     time.sleep(1)
-                    pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN))
+                    pygame.event.post(pygame.event.Event(pygame.KEYUP, key=pygame.K_RETURN))
 
         def update(self):
             # volume
@@ -247,15 +247,17 @@ class Game:
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_ESCAPE:
                         game.state = Game.StartScreen()
-                    elif self.ask_name:
-                        if event.key == pygame.K_BACKSPACE:
-                            self.name = self.name[:-1]
-                        elif event.key == pygame.K_RETURN:
-                            self.update_ranking()
-                            game.state = Game.Ranking()
-                        else:
-                            if len(self.name) < 8:
-                                self.name += event.unicode
+                elif self.ask_name and event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_BACKSPACE:
+                        self.name = self.name[:-1]
+                    elif event.key == pygame.K_RETURN:
+                        self.update_ranking()
+                        game.state = Game.Ranking()
+                    else:
+                        try:
+                            self.name += event.unicode if len(self.name) < 8 else ""
+                        except AttributeError:
+                            pass
 
     class Ranking:
         def __init__(self):
