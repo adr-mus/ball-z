@@ -1,6 +1,9 @@
 """ Module defining all bonuses. """
 
-import abc, random, os.path, math
+import abc
+import random
+import os
+import math
 
 import pygame
 

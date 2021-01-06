@@ -10,10 +10,12 @@ from tiles import RegularTile
 from main import SCREEN_HEIGHT, SCREEN_WIDTH, MARGIN
 
 
-pygame.init()
-
-
 class BallTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        pygame.init()
+        pygame.mixer.set_num_channels(0)
+
     def setUp(self):
         self.ball = Ball()
         self.ball.rect.center = (SCREEN_HEIGHT // 2, SCREEN_WIDTH // 2)
@@ -161,8 +163,7 @@ class BallTestCase(unittest.TestCase):
         self.assertAlmostEqual(self.ball.vy, vy, msg=msg)
 
         msg = "ball is fiery but there was no explosion after hit"
-        self.assertEqual(pygame.event.poll().type, events.POINTS)
-        self.assertEqual(pygame.event.poll().type, events.EXPLOSION, msg=msg)
+        self.assertIn(events.EXPLOSION, (event.type for event in pygame.event.get()), msg=msg)
         
 
 if __name__ == "__main__":

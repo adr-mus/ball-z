@@ -20,9 +20,11 @@ class Game:
         game, transition from running game to ranking, or ranking. Event loops 
         are used to change the state attribute. """
     music = pygame.mixer.Sound(os.path.join("sounds", "menu.wav"))
+    ranking_path = os.path.join("misc", "rank.pkl")
     
-    def __init__(self):
+    def __init__(self, *, start_lvl=1):
         self.state = Game.StartScreen()
+        self.start_lvl = start_lvl
 
     def draw(self, surface):
         """ Draws the current state of a game. """
@@ -83,13 +85,13 @@ class Game:
                         game.state = Game.Ranking()
                 elif event.type == pygame.MOUSEBUTTONUP:
                     Game.music.fadeout(1000)
-                    game.state = Game.RunningGame()
+                    game.state = Game.RunningGame(game.start_lvl)
 
     class RunningGame:
         margin = pygame.image.load(os.path.join("images", "margin.png"))
 
-        def __init__(self):
-            self.n_lvl = 1 # the current level number
+        def __init__(self, start_lvl=1):
+            self.n_lvl = start_lvl # the current level number
             self.lvl = Level(self.n_lvl) # the current level object
             self.lives = 2 # lives left
             self.score = 0 # points
@@ -138,7 +140,7 @@ class Game:
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_ESCAPE:
                         game.state = Game.StartScreen()
-                    elif not self.level.finished and event.key == pygame.K_p:
+                    elif not self.lvl.finished and event.key == pygame.K_p:
                         self.lvl.paused = not self.lvl.paused
                 elif event.type == pygame.MOUSEBUTTONUP:
                     if self.lvl.finished:
@@ -162,18 +164,17 @@ class Game:
                     game.state = Game.RankingTransition(final_score, won=event.won)
 
     class RankingTransition:
-        ranking_path = os.path.join("misc", "rank.pkl")
-
         def __init__(self, score, won):
             self.score = score
             self.title = "All Levels Cleared!" if won else "Good Luck Next Time!"
             try:
-                self.ranking = pickle.load(open(self.ranking_path, "rb"))
+                with open(Game.ranking_path, "rb") as f:
+                    self.ranking = pickle.load(f)
             except (FileNotFoundError, EOFError):
                 self.ranking = []
                 self.ask_name = True
             else:
-                self.ask_name = len(self.ranking) < 5 or self.ranking[-1][1] < score
+                self.ask_name = len(self.ranking) < 5 or self.ranking[-1][1] < self.score
             self.name = ""
 
             self.timer = pygame.time.get_ticks()
@@ -236,7 +237,7 @@ class Game:
             self.ranking.sort(key=lambda el: el[1], reverse=True)
             while len(self.ranking) > 5:
                 self.ranking.pop()
-            with open(self.ranking_path, "wb") as f:
+            with open(Game.ranking_path, "wb") as f:
                 pickle.dump(self.ranking, f)
 
         def eventloop(self, game):
@@ -245,19 +246,21 @@ class Game:
                     if event.key == pygame.K_ESCAPE:
                         Game.music.fadeout(1000)
                         game.state = Game.StartScreen()
-                    elif event.key == pygame.K_BACKSPACE:
-                        self.name = self.name[:-1]
-                    elif event.key == pygame.K_RETURN:
-                        self.update_ranking()
-                        game.state = Game.Ranking()
-                    else:
-                        if len(self.name) < 8:
-                            self.name += event.unicode
+                    elif self.ask_name:
+                        if event.key == pygame.K_BACKSPACE:
+                            self.name = self.name[:-1]
+                        elif event.key == pygame.K_RETURN:
+                            self.update_ranking()
+                            game.state = Game.Ranking()
+                        else:
+                            if len(self.name) < 8:
+                                self.name += event.unicode
 
     class Ranking:
         def __init__(self):
             try:
-                self.ranking = pickle.load(open("rank.pkl", "rb"))
+                with open(Game.ranking_path, "rb") as f:
+                    self.ranking = pickle.load(f)
             except (FileNotFoundError, EOFError):
                 self.ranking = []
             self.drawn = False

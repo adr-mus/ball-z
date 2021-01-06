@@ -1,6 +1,5 @@
 """ Top level script used to run the game. """
 
-# screen settings
 MARGIN = 32
 SCREEN_WIDTH, SCREEN_HEIGHT = 1024, 768
 

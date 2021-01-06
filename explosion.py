@@ -1,5 +1,6 @@
 """ Module defining the Explosion class. """
-import os.path
+
+import os
 
 import pygame
 

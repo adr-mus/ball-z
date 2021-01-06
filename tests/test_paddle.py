@@ -9,6 +9,7 @@ from main import SCREEN_HEIGHT, SCREEN_WIDTH, MARGIN
 
 
 pygame.init()
+pygame.mixer.set_num_channels(0)
 
 
 class PaddleTestCase(unittest.TestCase):

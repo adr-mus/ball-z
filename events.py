@@ -1,4 +1,5 @@
 """ Module contating user-defined events. """
+
 import pygame
 
 BONUS_DROPPED = pygame.USEREVENT + 1  # attributes: bonus

@@ -33,23 +33,25 @@ class Level:
 
         self.tile_matrix = [[None for _ in range(16)] for _ in range(16)]
         self.tiles = pygame.sprite.Group()
-        with open(os.path.join("levels", f"{n}.pkl"), "rb") as file:
-            file = pickle.load(file)
-            for line in file.split("\n"):
-                try:
-                    j, i, alias = line.split()
-                    if alias not in Tile.types:
-                        raise RuntimeError(f"invalid tile type: {alias}")
-                    i, j = int(i), int(j)
-                    tile = Tile.types[alias](MARGIN + 60 * i, 3 * MARGIN + 30 * j)
-                    self.tile_matrix[i][j] = tile
-                    self.tiles.add(tile)
-                except (TypeError, ValueError):
-                    pass
+        if n != 0:  # case n = 0 is used for testing
+            with open(os.path.join("levels", f"{n}.pkl"), "rb") as file:
+                file = pickle.load(file)
+                for line in file.split("\n"):
+                    try:
+                        j, i, alias = line.split()
+                        if alias not in Tile.types:
+                            raise RuntimeError(f"invalid tile type: {alias}")
+                        i, j = int(i), int(j)
+                        tile = Tile.types[alias](MARGIN + 60 * i, 3 * MARGIN + 30 * j)
+                        self.tile_matrix[i][j] = tile
+                        self.tiles.add(tile)
+                    except (TypeError, ValueError):
+                        pass
         
         self.bonuses = pygame.sprite.Group()
         self.explosions = pygame.sprite.Group()
 
+        self.n = n
         self.finished = False
         self.paused = False
         Ball.reset_state()
@@ -125,8 +127,9 @@ class Level:
 
     def on_death(self):
         """ Triggered when player loses all balls. """
-        self.sounds["death"].play()
-        time.sleep(1)
+        if self.n != 0:
+            self.sounds["death"].play()
+            time.sleep(1)
 
         Ball.reset_state()
 

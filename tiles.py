@@ -1,5 +1,8 @@
 """ Module containing all tile types. """
-import abc, os.path, random
+
+import abc
+import os
+import random
 
 import pygame
 
@@ -93,6 +96,8 @@ class Brick(Tile):
     """ Tile that basic ball can't destroy. """
     image = pygame.image.load(os.path.join("images", "tiles", "brick.png"))
     sound = pygame.mixer.Sound(os.path.join("sounds", "wall_hit.wav"))
+
+    sound.set_volume(0.25)
     
     def on_hit(self):
         self.sound.play()
