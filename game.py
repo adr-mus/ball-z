@@ -1,27 +1,28 @@
+# pylint: disable=missing-function-docstring,missing-class-docstring,invalid-name,no-member
 """ Module defining the high-level Game class. """
 
 import time
 import os
-import sys 
-import math 
+import sys
+import math
 import pickle
 
 import pygame
 
 import events
 from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
-from fonts import *
+from fonts import title_font, message_font, regular_font
 from level import Level
 
 
 class Game:
-    """ Proxy class representing a game. Relegates everything to self.state 
-        which represents a concrete state of a game: start screen, running 
-        game, transition from running game to ranking, or ranking. Event loops 
+    """ Proxy class representing a game. Relegates everything to self.state
+        which represents a concrete state of a game: start screen, running
+        game, transition from running game to ranking, or ranking. Event loops
         are used to change the state attribute. """
     music = pygame.mixer.Sound(os.path.join("sounds", "menu.wav"))
     ranking_path = os.path.join("misc", "rank.pkl")
-    
+
     def __init__(self, *, start_lvl=1):
         self.state = Game.StartScreen()
         self.start_lvl = start_lvl
@@ -74,7 +75,7 @@ class Game:
             dt = pygame.time.get_ticks() - self.timer
             Game.music.set_volume(self.base_volume + (dt / 6000) ** 2)
 
-        def eventloop(self, game):
+        def eventloop(self, game): # pylint: disable=no-self-use
             pygame.mouse.get_rel()
             for event in pygame.event.get():
                 if event.type == pygame.KEYUP:
@@ -136,6 +137,7 @@ class Game:
                 pygame.event.post(pygame.event.Event(events.GAME_OVER, won=True))
 
         def eventloop(self, game):
+            # pylint: disable=too-many-branches
             for event in pygame.event.get():
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_ESCAPE:
@@ -193,20 +195,20 @@ class Game:
             x = (SCREEN_WIDTH - text.get_width()) // 2
             y = (SCREEN_HEIGHT - text.get_height()) // 8
             surface.blit(text, (x, y))
-            
+
             if dt > 3000:
                 text = regular_font.render("Final Score:", True, pygame.Color("white"))
                 x = (SCREEN_WIDTH - text.get_width()) // 4
                 y = (SCREEN_HEIGHT - text.get_height()) // 3 + 100
                 surface.blit(text, (x, y))
-            
+
             if dt > 3500:
                 text = regular_font.render(str(self.score), True, pygame.Color("white"))
                 x = 2 * SCREEN_WIDTH // 3
                 y = (SCREEN_HEIGHT - text.get_height()) // 3 + 100
                 surface.blit(text, (x, y))
 
-            if dt > 4000: 
+            if dt > 4000:
                 if self.ask_name:
                     text = regular_font.render("Your Name", True, pygame.Color("white"))
                     x = (SCREEN_WIDTH - text.get_width()) // 4
@@ -242,9 +244,8 @@ class Game:
 
         def eventloop(self, game):
             for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
+                if event.type == pygame.KEYUP:
                     if event.key == pygame.K_ESCAPE:
-                        Game.music.fadeout(1000)
                         game.state = Game.StartScreen()
                     elif self.ask_name:
                         if event.key == pygame.K_BACKSPACE:
@@ -287,7 +288,7 @@ class Game:
                 x = (SCREEN_WIDTH - text.get_width()) // 2
                 y = 50
                 surface.blit(text, (x, y))
-                
+
                 # ranking
                 for i, (name, score) in enumerate(self.ranking):
                     text = regular_font.render(f"{i + 1}.", True, pygame.Color("white"))
@@ -302,10 +303,11 @@ class Game:
                     text = regular_font.render(str(score), True, pygame.Color("white"))
                     x = SCREEN_WIDTH - text.get_width() - 50
                     surface.blit(text, (x, y))
-                
+
                 self.drawn = True
 
-        def eventloop(self, game):
+        def eventloop(self, game): # pylint: disable=no-self-use
             for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONUP or event.type == pygame.KEYUP and (event.key == pygame.K_ESCAPE or event.key == pygame.K_r):
+                if (event.type == pygame.MOUSEBUTTONUP or event.type == pygame.KEYUP
+                    and (event.key == pygame.K_ESCAPE or event.key == pygame.K_r)):
                     game.state = Game.StartScreen()

@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring,invalid-name
 """ Module contatining the Ball class. """
 
 import math
@@ -13,12 +14,13 @@ pygame.mixer.init(buffer=128)
 
 
 class Ball(pygame.sprite.Sprite):
+    """ Class representing a ball. """
     images = {"base": pygame.image.load(os.path.join("images", "ball.png")),
               "fiery": pygame.image.load(os.path.join("images", "fiery_ball.png"))}
     image = images["base"] # the current image shared between all balls
     sounds = {"paddle_hit": pygame.mixer.Sound(os.path.join("sounds", "paddle.ogg")),
               "wall_hit": pygame.mixer.Sound(os.path.join("sounds", "wall_hit.wav"))}
-        
+
     # sound adjustments
     sounds["paddle_hit"].set_volume(0.05)
     sounds["wall_hit"].set_volume(0.25)
@@ -38,7 +40,9 @@ class Ball(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.rect = self.image.get_rect(center=(SCREEN_WIDTH // 2 + 10, SCREEN_HEIGHT - MARGIN - 20))
+        self.rect = self.image.get_rect(
+            center=(SCREEN_WIDTH // 2 + 10, SCREEN_HEIGHT - MARGIN - 20)
+        )
 
         # initial speed components
         self.vx = self.MAXSPEED // 3
@@ -103,10 +107,10 @@ class Ball(pygame.sprite.Sprite):
 
     def hit(self, tile):
         """ Triggered when the ball hits a tile. """
-        from tiles import GlassTile
+        from tiles import GlassTile # pylint: disable=import-outside-toplevel
 
-        # change the direction of the ball    
-        self.rect.move_ip(-self.vx, -self.vy)    
+        # change the direction of the ball
+        self.rect.move_ip(-self.vx, -self.vy)
         if not (isinstance(tile, GlassTile) and tile.hit):
             x1, y1 = tile.rect.center
             x2, y2 = self.rect.center
@@ -115,7 +119,7 @@ class Ball(pygame.sprite.Sprite):
                 self.vx *= -1
             else:
                 self.vy *= -1
-        
+
         if self.is_fiery:
             tile.kill()
             pygame.event.post(pygame.event.Event(events.EXPLOSION, where=tile.rect.topleft))

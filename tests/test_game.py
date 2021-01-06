@@ -1,3 +1,4 @@
+# pylint: disable=no-member,missing-module-docstring,missing-class-docstring,missing-function-docstring,invalid-name
 import unittest
 import os
 import pickle
@@ -60,11 +61,11 @@ class RunningGameTestCase(unittest.TestCase):
         self.assertIn(events.GAME_OVER, (event.type for event in pygame.event.get()))
 
     def test_next_level(self):
-        self.n_lvl = -1
+        self.state.n_lvl = -1
         self.state.next_level()
-        self.assertEqual(self.state.n_lvl, 1)
+        self.assertEqual(self.state.n_lvl, 0)
 
-        self.n_lvl = 100
+        self.state.n_lvl = 100
         self.state.next_level()
         self.assertIn(events.GAME_OVER, (event.type for event in pygame.event.get()))
 
@@ -124,7 +125,7 @@ class RankingTransitionTestCase(unittest.TestCase):
         self.game = Game(start_lvl=0)
         self.game.state = Game.RankingTransition(score=-10, won=False)
         self.state = self.game.state
-    
+
     def tearDown(self):
         try:
             os.remove(Game.ranking_path)
@@ -147,8 +148,8 @@ class RankingTransitionTestCase(unittest.TestCase):
             rank = pickle.load(f)
         self.assertEqual(rank, [("test", -1)])
 
-        test_rank = reversed([("test", 5), ("test", 4), ("test", 3), ("test", 2), ("test", 1), ("test", 0)])
-        self.state.ranking = list(test_rank)
+        test_rank = [("test", 5), ("test", 4), ("test", 3), ("test", 2), ("test", 1), ("test", 0)]
+        self.state.ranking = list(reversed(test_rank))
         self.state.update_ranking()
         self.assertTrue(os.path.exists(Game.ranking_path))
         with open(Game.ranking_path, "rb") as f:
@@ -156,35 +157,35 @@ class RankingTransitionTestCase(unittest.TestCase):
         self.assertEqual(rank, self.state.ranking[-5:])
 
     def test_eventloop(self):
-        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_t, unicode="t")
+        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_t, unicode="t")
         pygame.event.post(event)
-        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_e, unicode="e")
+        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_e, unicode="e")
         pygame.event.post(event)
-        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_s, unicode="s")
+        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_s, unicode="s")
         pygame.event.post(event)
-        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_t, unicode="t")
+        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_t, unicode="t")
         pygame.event.post(event)
         self.game.eventloop()
         self.assertEqual(self.state.name, "test")
 
         self.state.name = "longtest"
-        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_t, unicode="t")
+        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_t, unicode="t")
         pygame.event.post(event)
         self.game.eventloop()
         self.assertEqual(self.state.name, "longtest")
 
-        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_BACKSPACE)
+        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_BACKSPACE)
         pygame.event.post(event)
         self.game.eventloop()
         self.assertEqual(self.state.name, "longtes")
 
-        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN)
+        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_RETURN)
         pygame.event.post(event)
         self.game.eventloop()
         self.assertTrue(isinstance(self.game.state, Game.Ranking))
 
         self.game.state = Game.RankingTransition(score=-10, won=False)
-        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE)
+        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_ESCAPE)
         pygame.event.post(event)
         self.game.eventloop()
         self.assertTrue(isinstance(self.game.state, Game.StartScreen))
@@ -216,3 +217,4 @@ class RankingTestCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+    

@@ -1,6 +1,6 @@
+# pylint: disable=missing-function-docstring,invalid-name
 """ Module containing the Paddle class. """
 
-import math
 import os
 
 import pygame
@@ -40,7 +40,7 @@ class Paddle(pygame.sprite.Sprite):
             dx, _ = pygame.mouse.get_rel()
         if paused:
             return
-            
+
         if self.is_confused:
             dx *= -1
         left, right = self.rect.left, self.rect.right
@@ -70,3 +70,4 @@ class Paddle(pygame.sprite.Sprite):
             self.image, (int(w * 2 ** self.len), h)
         )
         self.rect = self.image.get_rect(center=self.rect.center)
+        

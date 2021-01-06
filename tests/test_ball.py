@@ -1,3 +1,4 @@
+# pylint: disable=no-member,missing-module-docstring,missing-class-docstring,missing-function-docstring,invalid-name
 import unittest
 import math
 
@@ -20,7 +21,7 @@ class BallTestCase(unittest.TestCase):
         self.ball = Ball()
         self.ball.rect.center = (SCREEN_HEIGHT // 2, SCREEN_WIDTH // 2)
         self.ball.vx, self.ball.vy = 1, 1
-    
+
     def test_reset_state(self):
         Ball.is_fiery = True
         Ball.is_tiny = True
@@ -99,9 +100,9 @@ class BallTestCase(unittest.TestCase):
 
         msg = "ball disappeared but is not dead"
         self.assertFalse(self.ball.alive(), msg=msg)
-    
+
     def test_draw(self):
-        surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT)) # pylint: disable=too-many-function-args
         self.ball.draw(surface)
 
         msg = "ball is not displayed"
@@ -164,7 +165,7 @@ class BallTestCase(unittest.TestCase):
 
         msg = "ball is fiery but there was no explosion after hit"
         self.assertIn(events.EXPLOSION, (event.type for event in pygame.event.get()), msg=msg)
-        
+
 
 if __name__ == "__main__":
     unittest.main()

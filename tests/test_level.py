@@ -1,3 +1,4 @@
+# pylint: disable=no-member,missing-module-docstring,missing-class-docstring,missing-function-docstring,invalid-name
 import unittest
 
 import pygame
@@ -55,7 +56,7 @@ class LevelTestCase(unittest.TestCase):
         bonus = FireBall(*self.lvl.paddle.rect.center)
         self.lvl.detect_collisions()
         self.assertFalse(bonus.alive())
-    
+
     def test_explosion(self):
         self.lvl.explosion(60 + MARGIN, 30 + 3 * MARGIN)
         self.assertFalse(self.lvl.tile_matrix[0][0].alive())

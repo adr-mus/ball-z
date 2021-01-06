@@ -1,3 +1,5 @@
+# pylint: disable=no-member,missing-module-docstring,missing-class-docstring,missing-function-docstring,invalid-name
+
 import unittest
 import math
 
@@ -5,7 +7,8 @@ import pygame
 
 import events
 from game import Game
-from bonuses import *
+from ball import Ball
+from bonuses import * # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 pygame.init()
@@ -19,7 +22,7 @@ class BonusTestCase(unittest.TestCase):
         Bonus.on_collect()
         self.assertEqual(pygame.event.poll().type, events.POINTS)
         self.assertEqual(pygame.event.poll().type, events.BONUS_COLLECTED)
-    
+
     def test_random_bonus(self):
         random_bonus(0, 0)
         self.assertEqual(pygame.event.poll().type, events.BONUS_DROPPED)
@@ -37,36 +40,34 @@ class LifeTestCase(unittest.TestCase):
         lives = game.lives
         Life.take_effect(game)
         self.assertEqual(game.lives, lives + 1)
-        
+
 
 class SpeedUpTestCase(unittest.TestCase):
     def test_take_effect(self):
         SpeedUp.take_effect(game)
         for ball in game.lvl.balls:
             self.assertAlmostEqual(math.hypot(ball.vx, ball.vy), ball.MAXSPEED, -1)
-        
+
 
 class FireBallTestCase(unittest.TestCase):
     def test_take_effect(self):
-        from ball import Ball
-
         FireBall.take_effect(game)
         self.assertTrue(Ball.is_fiery)
-        
+
 
 class SplitTestCase(unittest.TestCase):
     def test_take_effect(self):
         n = len(game.lvl.balls)
         Split.take_effect(game)
         self.assertEqual(len(game.lvl.balls), 2 * n)
-        
-        
+
+
 class MagnetTestCase(unittest.TestCase):
     def test_take_effect(self):
         Magnet.take_effect(game)
         self.assertTrue(game.lvl.paddle.is_magnetic)
-        
-        
+
+
 class EnlargeTestCase(unittest.TestCase):
     def test_take_effect(self):
         ln = game.lvl.paddle.len
@@ -76,7 +77,7 @@ class EnlargeTestCase(unittest.TestCase):
         Enlarge.take_effect(game)
         Enlarge.take_effect(game)
         self.assertEqual(game.lvl.paddle.len, 2)
- 
+
 
 class ShrinkTestCase(unittest.TestCase):
     def test_take_effect(self):
@@ -89,13 +90,14 @@ class ShrinkTestCase(unittest.TestCase):
         Shrink.take_effect(game)
         Shrink.take_effect(game)
         self.assertEqual(game.lvl.paddle.len, -2)
-        
+
 
 class ConfuseTestCase(unittest.TestCase):
     def test_take_effect(self):
         Confuse.take_effect(game)
         self.assertTrue(game.lvl.paddle.is_confused)
-    
-        
+
+
 if __name__ == "__main__":
     unittest.main()
+    

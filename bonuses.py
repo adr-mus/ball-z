@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring,invalid-name
 """ Module defining all bonuses. """
 
 import abc
@@ -8,7 +9,7 @@ import math
 import pygame
 
 import events
-from main import SCREEN_WIDTH, SCREEN_HEIGHT, MARGIN
+from main import SCREEN_HEIGHT, MARGIN
 from ball import Ball
 
 
@@ -21,7 +22,7 @@ def random_bonus(x0, y0):
 class Bonus(abc.ABC, pygame.sprite.Sprite):
     """ Base Bonus class. Each subclass must be decorated with the register_type
         method in order for the new bonus to appear in the game. This way, each
-        bonus has an associated weight used later for picking a random bonus when 
+        bonus has an associated weight used later for picking a random bonus when
         a tile is hit. """
     image = None  # to be specified in subclasses
     sounds = {"positive": pygame.mixer.Sound(os.path.join("sounds", "positive.wav")),
@@ -32,7 +33,7 @@ class Bonus(abc.ABC, pygame.sprite.Sprite):
     sounds["negative"].set_volume(0.1)
 
     # used for rolling
-    types = []  
+    types = []
     weights = []
 
     @staticmethod
@@ -54,7 +55,6 @@ class Bonus(abc.ABC, pygame.sprite.Sprite):
     @abc.abstractclassmethod
     def take_effect(cls, game):
         """ Defines what happens when a particular bonus is collected. """
-        pass
 
     def __init__(self, x0, y0):
         pygame.sprite.Sprite.__init__(self)

@@ -1,3 +1,4 @@
+# pylint: disable=no-member
 """ Top level script used to run the game. """
 
 MARGIN = 32

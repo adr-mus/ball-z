@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring
 """ Module containing all tile types. """
 
 import abc
@@ -36,7 +37,6 @@ class Tile(abc.ABC, pygame.sprite.Sprite):
     @abc.abstractmethod
     def on_hit(self):
         """ Defines what happens when a particular tile is hit. """
-        pass
 
     def kill(self):
         # base point value
@@ -57,7 +57,7 @@ class RegularTile(Tile):
     sound = pygame.mixer.Sound(os.path.join("sounds", "r_death.wav"))
 
     sound.set_volume(0.4)
-    
+
     def on_hit(self):
         self.sound.play()
         self.kill()
@@ -98,7 +98,7 @@ class Brick(Tile):
     sound = pygame.mixer.Sound(os.path.join("sounds", "wall_hit.wav"))
 
     sound.set_volume(0.25)
-    
+
     def on_hit(self):
         self.sound.play()
 
@@ -109,7 +109,7 @@ class UnstableTile(Tile):
     images = {"base": pygame.image.load(os.path.join("images", "tiles", "unstable.png")),
               "hit": pygame.image.load(os.path.join("images", "tiles", "explosive.png"))}
     sound = pygame.mixer.Sound(os.path.join("sounds", "u_hit.wav"))
-    
+
     def __init__(self, x, y):
         self.hit = False
         self.image = self.images["base"]
@@ -123,7 +123,7 @@ class UnstableTile(Tile):
             self.image = self.images["hit"]
         else:
             self.kill()
-    
+
     def kill(self):
         pygame.event.post(pygame.event.Event(events.POINTS, points=10))
         pygame.event.post(pygame.event.Event(events.EXPLOSION, where=self.rect.topleft))
@@ -137,7 +137,7 @@ class ExplosiveTile(Tile):
 
     def on_hit(self):
         self.kill()
-    
+
     def kill(self):
         pygame.event.post(pygame.event.Event(events.POINTS, points=10))
         pygame.event.post(pygame.event.Event(events.EXPLOSION, where=self.rect.topleft))

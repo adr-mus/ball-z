@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring,invalid-name
 """ Module defining the Explosion class. """
 
 import os
@@ -7,11 +8,13 @@ import pygame
 
 class Explosion(pygame.sprite.Sprite):
     """ Class representing a visual/acustic explosion. """
-    images = [pygame.image.load(os.path.join("images", "explosion", f"{i}.png")) for i in range(1, 7)]
+    images = [
+        pygame.image.load(os.path.join("images", "explosion", f"{i}.png")) for i in range(1, 7)
+    ]
     sound = pygame.mixer.Sound(os.path.join("sounds", "explode.wav"))
 
     sound.set_volume(0.1)
-    
+
     def __init__(self, x, y, mute=False):
         pygame.sprite.Sprite.__init__(self)
 

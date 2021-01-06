@@ -1,6 +1,8 @@
+# pylint: disable=no-member
 """ Module contating user-defined events. """
 
 import pygame
+
 
 BONUS_DROPPED = pygame.USEREVENT + 1  # attributes: bonus
 BONUS_COLLECTED = pygame.USEREVENT + 2  # attributes: bonus

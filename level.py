@@ -1,6 +1,7 @@
+# pylint: disable=invalid-name,missing-function-docstring
 """ Module containing the Level class. """
 
-import os 
+import os
 import time
 import pickle
 
@@ -12,11 +13,10 @@ from fonts import message_font
 from ball import Ball
 from paddle import Paddle
 from tiles import Tile, Brick
-from bonuses import Bonus
 from explosion import Explosion
 
 
-class Level:
+class Level: # pylint: disable=too-many-instance-attributes
     """ Class representing a level. It keeps track of all sprites:
         balls, the paddle, tiles, explosions and bonuses. """
     sounds = {
@@ -47,7 +47,7 @@ class Level:
                         self.tiles.add(tile)
                     except (TypeError, ValueError):
                         pass
-        
+
         self.bonuses = pygame.sprite.Group()
         self.explosions = pygame.sprite.Group()
 
@@ -55,7 +55,7 @@ class Level:
         self.finished = False
         self.paused = False
         Ball.reset_state()
-        
+
     def draw(self, surface):
         # draw all sprites
         self.explosions.draw(surface)
@@ -78,7 +78,7 @@ class Level:
             surface.blit(text, (x, y))
 
     def update(self):
-        """ Updates the postions of all sprites. """ 
+        """ Updates the postions of all sprites. """
         self.paddle.update(paused=self.finished or self.paused)
         if not (self.finished or self.paused):
             self.balls.update()
@@ -109,7 +109,7 @@ class Level:
                 break
 
     def explosion(self, x, y):
-        """ Trigerred when an explosion occurs. Destoys all tiles around 
+        """ Trigerred when an explosion occurs. Destoys all tiles around
             the explosion center. """
         i, j = (x - MARGIN) // 60, (y - 3 * MARGIN) // 30
         for k in range(-1, 2):

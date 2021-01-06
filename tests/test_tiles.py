@@ -1,10 +1,10 @@
+# pylint: disable=no-member,missing-module-docstring,missing-class-docstring,missing-function-docstring,invalid-name
 import unittest
-import math
 
 import pygame
 
 import events
-from tiles import *
+from tiles import RegularTile, GlassTile, Brick, UnstableTile, ExplosiveTile
 
 
 pygame.init()
