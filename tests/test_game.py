@@ -157,29 +157,29 @@ class RankingTransitionTestCase(unittest.TestCase):
         self.assertEqual(rank, self.state.ranking[-5:])
 
     def test_eventloop(self):
-        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_t, unicode="t")
+        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_t, unicode="t")
         pygame.event.post(event)
-        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_e, unicode="e")
+        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_e, unicode="e")
         pygame.event.post(event)
-        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_s, unicode="s")
+        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_s, unicode="s")
         pygame.event.post(event)
-        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_t, unicode="t")
+        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_t, unicode="t")
         pygame.event.post(event)
         self.game.eventloop()
         self.assertEqual(self.state.name, "test")
 
         self.state.name = "longtest"
-        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_t, unicode="t")
+        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_t, unicode="t")
         pygame.event.post(event)
         self.game.eventloop()
         self.assertEqual(self.state.name, "longtest")
 
-        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_BACKSPACE)
+        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_BACKSPACE)
         pygame.event.post(event)
         self.game.eventloop()
         self.assertEqual(self.state.name, "longtes")
 
-        event = pygame.event.Event(pygame.KEYUP, key=pygame.K_RETURN)
+        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN)
         pygame.event.post(event)
         self.game.eventloop()
         self.assertTrue(isinstance(self.game.state, Game.Ranking))
