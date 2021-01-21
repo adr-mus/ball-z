@@ -34,7 +34,7 @@ All graphics except explosions are mine. Explosions, fonts and sound effects com
  - Negative bonuses:
    - shrinks - halves the length of the paddle,
    - speed up - increases the speed of all balls,
-   - confuse - directions are reversed, i.e., left is right and right is left,
+   - confuse - directions are reversed, i.e. left is right and right is left,
    - death - you lose one life.
   
   - Hitting tiles and collecting bonuses increases your score.
